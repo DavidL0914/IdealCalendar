@@ -4,8 +4,8 @@ search_api_url = "https://api.spoonacular.com/recipes/complexSearch"
 info_api_url = "https://api.spoonacular.com/recipes/{id}/information"
 api_key = "bda6dcbd9ea9479995b632addb9f3761"
 search_params = {"apiKey": api_key,
-                 "titleMatch": "noodles"
-                 "addRecipeInformation: true"
+                 "titleMatch": "noodles",
+                 "diet": "vegetarian"
                  }
 info_params = {"apiKey": api_key,}
 
