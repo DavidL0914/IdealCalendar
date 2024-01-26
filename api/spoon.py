@@ -1,48 +1,36 @@
-import json, jwt
-from flask import Blueprint, request, jsonify
-from flask_restful import Api, Resource
 import requests
 
-# Change variable names and API details
-spoonacular_api = Blueprint('spoonacular_api', __name__, url_prefix='/api/spoonacular')
-api = Api(spoonacular_api)
+search_api_url = "https://api.spoonacular.com/recipes/complexSearch"
+info_api_url = "https://api.spoonacular.com/recipes/{id}/information"
+api_key = "bda6dcbd9ea9479995b632addb9f3761"
+search_params = {"apiKey": api_key,
+                 "titleMatch": "noodles",
+                 "diet": "vegetarian"
+                 }
+info_params = {"apiKey": api_key,}
 
-class SpoonacularAPI:
-    class RecipeSearch(Resource):
-        def post(self):
-            ''' Read data from the JSON body '''
-            body = request.get_json()
+search_response = requests.get(search_api_url, params=search_params)
 
-            ''' Avoid garbage in, error checking '''
-            # Extract dietary preferences from the request
-            glutenfree = body.get('glutenfree', False)
-            ketogenic = body.get('ketogenic', False)
-            vegan = body.get('vegan', False)
-            vegetarian = body.get('vegetarian', False)
-            sustainable = body.get('sustainable', False)
-            healthy = body.get('healthy', False)
+if search_response.status_code == 200:
+    search_data = search_response.json()
+    recipe_ids = [recipe['id'] for recipe in search_data.get("results", [])]
 
-            ''' #1: Key code block, setup parameters for Spoonacular API '''
-            params = {
-                'apiKey': 'bda6dcbd9ea9479995b632addb9f3761',
-                'number': 1,  # Specify the number of recipes to retrieve
-                'glutenFree': glutenfree,
-                'ketogenic': ketogenic,
-                'vegan': vegan,
-                'vegetarian': vegetarian,
-                'sustainable': sustainable,
-                'healthy': healthy
-            }
+    with open("recipes_details.html", "w", encoding="utf-8") as file:
+        file.write("<html><body><h1>Recipes Details</h1><ul>")
+        
+        for recipe_id in recipe_ids:
+            info_response = requests.get(info_api_url.format(id=recipe_id), params=info_params)
+            if info_response.status_code == 200:
+                info_data = info_response.json()
 
-            spoonacular_endpoint = 'https://api.spoonacular.com/recipes/complexSearch'
-            response = requests.get(spoonacular_endpoint, params=params)
-
-            if response.status_code == 200:
-                # Parse and return the Spoonacular response
-                spoonacular_data = response.json()
-                return jsonify(spoonacular_data)
+                file.write(f"<li><strong>{info_data['title']}</strong><br>")
+                file.write(f"<img src='{info_data['image']}' alt='{info_data['title']}'><br>")
+                file.write(f"Summary: {info_data['summary']}<br><br></li>")
             else:
-                return {'error': 'Unable to fetch Spoonacular data'}
+                print(f"Error fetching details for recipe ID {recipe_id}: {info_response.status_code}")
 
-    # Building REST API endpoint
-    api.add_resource(RecipeSearch, '/recipe_search')
+        file.write("</ul></body></html>")
+
+    print("Detailed information has been written to recipes_details.html.")
+else:
+    print(f"Error: {search_response.status_code}")
