@@ -12,8 +12,8 @@ user_api = Blueprint('user_api', __name__,
 # API docs https://flask-restful.readthedocs.io/en/latest/api.html
 api = Api(user_api)
 
-class UserAPI:        
-    class _CRUD(Resource):  # User API operation for Create, Read.  THe Update, Delete methods need to be implemeented
+class UserAPI:
+    class _CRUD(Resource):  # User API operation for Create, Read.  THe Update, Delete methods need to be implemented
         @token_required
         def post(self, current_user): # Create method
             ''' Read data for json body '''
